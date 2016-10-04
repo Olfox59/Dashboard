@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Attribut Architecture
     Handler mHandler;
-    int myRefreshViewPeriod = 100;
+    int myRefreshViewPeriod = 10;
 
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
@@ -92,8 +92,8 @@ public class MainActivity extends AppCompatActivity {
 
             Log.i("Handlers", ""+compteur);
             myDashboard.setRpm(""+compteur );
-            //myDashboard.setRpmprogress(compteur);
-            myDashboard.setRpmprogress(16000);
+            myDashboard.setRpmprogress(compteur);
+            //myDashboard.setRpmprogress(16000);
             compteur=(compteur+100)%15000;
             /** Do something **/
             mHandler.postDelayed(mRunnable, myRefreshViewPeriod);

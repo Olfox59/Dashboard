@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item android:id="@+id/progressBackgroung">
+
+
+            <shape android:shape="rectangle">
+
+                <corners android:radius="20dp"/>
+                <solid android:color="#777" />
+            </shape>
+
+
+    </item>
+
+
+
     <item android:id="@+id/progress">
 
         <clip android:clipOrientation="vertical" android:gravity="bottom">
 
-            <shape android:shape="rectangle"
-                >
+            <shape android:shape="rectangle">
+
                 <corners android:radius="20dp"/>
                 <solid android:color="#00ff00" />
-                <gradient   android:startColor="@color/gradient_start"
+                <gradient   android:startColor="@color/colorPrimary"
                             android:endColor="@color/colorAccent"
-                            android:gradientRadius="180"/>
-
+                            android:angle="90"/>
             </shape>
         </clip>
 
     </item>
-
 
 
 </layer-list>
