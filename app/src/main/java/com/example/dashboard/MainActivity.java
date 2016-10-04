@@ -1,6 +1,7 @@
 package com.example.dashboard;
 
 import android.databinding.DataBindingUtil;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -20,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.dashboard.databinding.FragmentDashBinding;
@@ -51,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+
+
 
         //fle lance le timer
         useHandler();
@@ -86,7 +92,9 @@ public class MainActivity extends AppCompatActivity {
 
             Log.i("Handlers", ""+compteur);
             myDashboard.setRpm(""+compteur );
-            compteur=(compteur+500)%15000;
+            //myDashboard.setRpmprogress(compteur);
+            myDashboard.setRpmprogress(16000);
+            compteur=(compteur+100)%15000;
             /** Do something **/
             mHandler.postDelayed(mRunnable, myRefreshViewPeriod);
         }
@@ -146,14 +154,13 @@ public class MainActivity extends AppCompatActivity {
 
             switch(getArguments().getInt(ARG_SECTION_NUMBER)){
 
-                case 1:     //rootView = inflater.inflate(R.layout.fragment_dash, container, false);return rootView;
-
+                case 1:
 
                     FragmentDashBinding binding = DataBindingUtil.inflate(inflater,R.layout.fragment_dash,container,false);
                     binding.setDash(myDashboard);
                     View view = binding.getRoot();
 
-                        return view;
+                    return view;
 
                 default:    rootView = inflater.inflate(R.layout.fragment_main, container, false);
                     return rootView;
