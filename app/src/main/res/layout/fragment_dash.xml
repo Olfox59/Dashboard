@@ -24,7 +24,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_weight="85">
+                android:layout_weight="85"
+                android:id="@+id/layout_jauge">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -37,30 +38,39 @@
                     android:textColor="@android:color/background_light"
                     android:textStyle="normal|bold"/>
 
-                    <RelativeLayout
+
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="80">
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_weight="80">
 
-                        <ProgressBar
-                            style="?android:attr/progressBarStyleHorizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                        android:max="16000"
+                        android:id="@+id/progressBarRPM"
+                        android:progress="@{dash.rpmprogress}"
+                        android:progressDrawable="@drawable/jauge_rpm"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentStart="true"
+                    />
 
-                            android:max="16000"
-                            android:id="@+id/progressBarRPM"
-                            android:progress="@{dash.rpmprogress}"
-                            android:progressDrawable="@drawable/jauge_rpm"
-                            android:layout_alignParentBottom="true"
-                            android:layout_alignParentStart="true" />
-                    </RelativeLayout>
+                    <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:srcCompat="@drawable/jauge1"
+                    android:id="@+id/imageView" />
+                </RelativeLayout>
 
-                </LinearLayout>
-                <LinearLayout
+            </LinearLayout>
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="15">
-                </LinearLayout>
+            </LinearLayout>
 
         </LinearLayout>
     </FrameLayout>

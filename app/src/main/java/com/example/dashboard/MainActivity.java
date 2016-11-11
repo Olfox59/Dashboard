@@ -25,6 +25,25 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.dashboard.databinding.FragmentDashBinding;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
      * may be best to switch to a
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
+    private static final String debugString="debug";
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     /**
@@ -48,11 +68,16 @@ public class MainActivity extends AppCompatActivity {
 
     //Attribut Architecture
     Handler mHandler;
-    int myRefreshViewPeriod = 10;
+    int myRefreshViewPeriod = 100;
 
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
 
+    //connection tcp
+    public static final String SERVER_IP = "192.168.4.1";
+    public int SERVER_PORT = 2525;
+    Socket clientSocket= null;
+    Thread m_ObjThreadClient;
 
 
     @Override
@@ -71,14 +96,91 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
-
-
         //fle lance le timer
         useHandler();
-
+        Log.i(debugString,"fin oncreate");
+        //startClient();
     }
 
+    public void startClient(){
 
+        m_ObjThreadClient = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    Log.i(debugString,"Input Thread");
+                    //Log.i(debugString,"Try to connect ....");
+                    clientSocket = new Socket(SERVER_IP,SERVER_PORT);
+                    Log.i(debugString,"connect to socket");
+                    if(clientSocket.isConnected() ){
+                        Log.i(debugString,"Client connected");
+                    }
+                    else{
+                        Log.i(debugString,"Client NOT connected");
+                    }
+                    //ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                   // Log.i(debugString,"Sending to server...");
+                    bw.write(""+compteur );
+
+                    bw.newLine();
+                    bw.flush();
+                    Log.i(debugString,"Send !!!");
+
+                    clientSocket.setSoTimeout(90);
+
+                    //ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
+                    BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    //Log.i(debugString,"Wait for read...");
+                    //System.out.println("message from server:"+br.readLine());
+
+                    Log.i(debugString,"message from server:"+br.readLine());
+
+
+                    /*String fileName = "temp.txt";
+
+
+                        // Assume default encoding.
+                        FileWriter fileWriter =     new FileWriter(fileName);
+
+                        // Always wrap FileWriter in BufferedWriter.
+                        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+                        // Note that write() does not automatically
+                        // append a newline character.
+                        bufferedWriter.write(br.readLine());
+                        bufferedWriter.newLine();
+
+                        // Always close files.
+                        bufferedWriter.close();
+
+*/
+
+
+
+
+                    clientSocket.close();
+                    Log.i(debugString,"Socket closed");
+
+                } catch (IOException e) {
+                    Log.i(debugString,"error");
+                    System.out.println(e);
+                    e.printStackTrace();
+                    try {
+                        clientSocket.close();
+                        Log.i(debugString,"TIMEOUT: Socket closed/r/n---------------/r/n ");
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    //Log.e(debugString,e.getMessage());
+                }
+
+            }
+        });
+
+        m_ObjThreadClient.start();
+    }
 
     public void useHandler() {
         mHandler = new Handler();
@@ -90,11 +192,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
 
-            Log.i("Handlers", ""+compteur);
+            //Log.i("Handlers", ""+compteur);
             myDashboard.setRpm(""+compteur );
             myDashboard.setRpmprogress(compteur);
             //myDashboard.setRpmprogress(16000);
-            compteur=(compteur+100)%15000;
+            //compteur=(compteur+100)%15000;
+            compteur=compteur+1;
+            startClient();
+            Map<String,Object> toto = new HashMap<String,Object>();
+            toto.put("tkt",7);
+            toto.put("tkt2","toto");
+            toto.get("tkt");
             /** Do something **/
             mHandler.postDelayed(mRunnable, myRefreshViewPeriod);
         }

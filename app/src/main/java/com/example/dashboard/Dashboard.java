@@ -25,6 +25,7 @@ public class Dashboard extends BaseObservable{
 
     @Bindable
     public String getRpm() {
+
         return rpm;
     }
 
