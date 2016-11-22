@@ -223,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
             //myDashboard.setRpmprogress(compteur);
             //myDashboard.setRpmprogress(16000);
             //compteur=(compteur+100)%15000;
-            mViewPager.setCurrentItem(IhmTab,true);     //change tab with joystick X
+            mViewPager.setCurrentItem(IhmTab,true);      //change tab with joystick X
             startClient();
 
             /** Do something **/
