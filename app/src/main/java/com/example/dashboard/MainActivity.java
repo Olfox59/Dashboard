@@ -1,13 +1,9 @@
 package com.example.dashboard;
 
 import android.databinding.DataBindingUtil;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.design.widget.TabLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -21,29 +17,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.ProgressBar;
-import android.widget.TextView;
-
 import com.example.dashboard.databinding.FragmentDashBinding;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,7 +48,9 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager mViewPager;
 
     //Attribut debug
-    public int compteur=0;
+    public  int compteur=0;
+    public int compteurErreur=0;
+    public int IhmTab =-1;
 
     //Attribut Architecture
     Handler mHandler;
@@ -73,11 +59,15 @@ public class MainActivity extends AppCompatActivity {
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
 
-    //connection tcp
+    //Attribut connection tcp
     public static final String SERVER_IP = "192.168.4.1";
-    public int SERVER_PORT = 2525;
+    public int SERVER_PORT = 333;
     Socket clientSocket= null;
     Thread m_ObjThreadClient;
+
+    //Attribut Joystick
+    int smTab=0;
+
 
 
     @Override
@@ -100,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         useHandler();
         Log.i(debugString,"fin oncreate");
         //startClient();
+
+
     }
 
     public void startClient(){
@@ -108,73 +100,107 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
 
+            try {
+                Log.i(debugString,"Input Thread"+compteur);
+
+                compteur++;
+
+                //OPEN SOKET
+                clientSocket = new Socket(SERVER_IP,SERVER_PORT);
+
+                Log.i(debugString,"connexion OK"+compteur);
+
+
+                //WRITE
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                bw.write(""+compteur );
+                bw.newLine();
+                bw.flush();
+                Log.i(debugString,"SEND: "+compteur);
+
+
+
+                // READ
+                BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream() ) );
+
+                clientSocket.setSoTimeout(90);
+                Log.i(debugString,"wait data from serveur...");
+                String dataMoto=""+br.readLine();
+                Log.i(debugString,"RECEIVE: "+dataMoto);
+                //dataMoto ="{key1:value1,key2:value2}";
                 try {
-                    Log.i(debugString,"Input Thread");
-                    //Log.i(debugString,"Try to connect ....");
-                    clientSocket = new Socket(SERVER_IP,SERVER_PORT);
-                    Log.i(debugString,"connect to socket");
-                    if(clientSocket.isConnected() ){
-                        Log.i(debugString,"Client connected");
+                    JSONObject json_obj = new JSONObject(dataMoto);
+
+                    //RPM
+                    //myDashboard.setRpm(""+json_obj.getString("RPM")+"/"+compteur );
+                    myDashboard.setRpm(""+json_obj.getString("RPM") );
+                    //myDashboard.setRpmprogress(Integer.parseInt(myDashboard.getRpm()) );
+                    Log.i(debugString,"rpm recu "+myDashboard.getRpm());
+
+                    //JOYSTICK- NAVIGATION
+                    int joyX = Integer.parseInt(json_obj.getString("JOYX") );
+                    int joyY = Integer.parseInt(json_obj.getString("JOYY") );
+                    int joyClick = Integer.parseInt(json_obj.getString("JOYCLICK") );
+
+                    IhmTab = mViewPager.getCurrentItem();
+
+                    switch (smTab){
+                        case 0: //wait action
+
+                            if( (joyX>900)&&(IhmTab <2) ){
+                                IhmTab = IhmTab +1;
+                                smTab = 1;
+                            }
+                            else{
+                                if( (joyX<200)&&(IhmTab >0) ){
+                                    IhmTab = IhmTab -1;
+                                    smTab = 2;
+                                }
+                            }
+                            break;
+
+                        case 1: //wait realease droit
+                            if( (joyX<700) ){ smTab = 0;  }         //release du joystick
+                            break;
+
+                        case 2: //wait realease gauche
+                            if( (joyX>400) ){smTab = 0;  }        //release du joystick
+                            break;
+
+                        default:
+                            //error
+                            break;
+
                     }
-                    else{
-                        Log.i(debugString,"Client NOT connected");
-                    }
-                    //ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-                   // Log.i(debugString,"Sending to server...");
-                    bw.write(""+compteur );
 
-                    bw.newLine();
-                    bw.flush();
-                    Log.i(debugString,"Send !!!");
-
-                    clientSocket.setSoTimeout(90);
-
-                    //ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-                    BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    //Log.i(debugString,"Wait for read...");
-                    //System.out.println("message from server:"+br.readLine());
-
-                    Log.i(debugString,"message from server:"+br.readLine());
-
-
-                    /*String fileName = "temp.txt";
-
-
-                        // Assume default encoding.
-                        FileWriter fileWriter =     new FileWriter(fileName);
-
-                        // Always wrap FileWriter in BufferedWriter.
-                        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-                        // Note that write() does not automatically
-                        // append a newline character.
-                        bufferedWriter.write(br.readLine());
-                        bufferedWriter.newLine();
-
-                        // Always close files.
-                        bufferedWriter.close();
-
-*/
-
-
-
-
-                    clientSocket.close();
-                    Log.i(debugString,"Socket closed");
-
-                } catch (IOException e) {
-                    Log.i(debugString,"error");
-                    System.out.println(e);
+                } catch (JSONException e) {
+                    Log.i(debugString,"erreur JSON:"+e);
                     e.printStackTrace();
-                    try {
-                        clientSocket.close();
-                        Log.i(debugString,"TIMEOUT: Socket closed/r/n---------------/r/n ");
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-                    //Log.e(debugString,e.getMessage());
                 }
+
+
+                Log.i(debugString,dataMoto);
+
+                //CLOSE SOCKET
+                clientSocket.close();
+                Log.i(debugString,"Socket closed");
+
+            } catch (IOException e) {
+
+                Log.i(debugString,""+e);
+                e.printStackTrace();
+
+                try {
+                    clientSocket.close();
+                    compteurErreur++;
+                    Log.i(debugString,"TIMEOUT num erreur:"+compteurErreur);
+                    Log.e(debugString,"Stat="+(float)(((float)compteurErreur/(float)compteur)*100.0)+"%" );
+                }
+                catch (IOException e1) {
+                    e1.printStackTrace();
+                    Log.i(debugString,"FAIL close"+compteurErreur);
+                }
+            }
 
             }
         });
@@ -193,16 +219,13 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
 
             //Log.i("Handlers", ""+compteur);
-            myDashboard.setRpm(""+compteur );
-            myDashboard.setRpmprogress(compteur);
+
+            //myDashboard.setRpmprogress(compteur);
             //myDashboard.setRpmprogress(16000);
             //compteur=(compteur+100)%15000;
-            compteur=compteur+1;
+            mViewPager.setCurrentItem(IhmTab,true);     //change tab with joystick X
             startClient();
-            Map<String,Object> toto = new HashMap<String,Object>();
-            toto.put("tkt",7);
-            toto.put("tkt2","toto");
-            toto.get("tkt");
+
             /** Do something **/
             mHandler.postDelayed(mRunnable, myRefreshViewPeriod);
         }
