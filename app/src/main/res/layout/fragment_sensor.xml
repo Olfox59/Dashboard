@@ -1,0 +1,66 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="capteur"
+            type="com.example.dashboard.Sensors"/>
+
+    </data>
+
+
+    <FrameLayout
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".sensor">
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="223dp">
+
+            <TextView
+                android:text="@{capteur.text}"
+                android:layout_width="188dp"
+                android:layout_height="match_parent"
+                android:id="@+id/textView"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:layout_weight="0.36" />
+
+            <TableLayout android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:layout_width="wrap_content">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+
+                    <TextView
+                        android:text="TextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/textView2"
+                        android:layout_weight="0.36"
+                        android:background="@color/colorAccent" />
+
+                    <TextView
+                        android:text="TextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/textView3"
+                        android:background="@color/colorAccent" />
+
+                </TableRow>
+
+
+            </TableLayout>
+
+
+        </LinearLayout>
+
+
+    </FrameLayout>
+
+</layout>

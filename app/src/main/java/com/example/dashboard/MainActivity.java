@@ -1,6 +1,10 @@
 package com.example.dashboard;
 
+import android.content.Context;
 import android.databinding.DataBindingUtil;
+import android.net.wifi.SupplicantState;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.dashboard.databinding.FragmentDashBinding;
+import com.example.dashboard.databinding.FragmentSensorBinding;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,12 +63,18 @@ public class MainActivity extends AppCompatActivity {
 
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
+    final static Sensors mySensors = new Sensors();
 
     //Attribut connection tcp
     public static final String SERVER_IP = "192.168.4.1";
     public int SERVER_PORT = 333;
     Socket clientSocket= null;
     Thread m_ObjThreadClient;
+    //Wifi
+    String ssid;
+    WifiInfo wifiInfo;
+    //WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
 
     //Attribut Joystick
     int smTab=0;
@@ -86,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
+
         //fle lance le timer
         useHandler();
         Log.i(debugString,"fin oncreate");
@@ -101,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
 
             try {
+
                 Log.i(debugString,"Input Thread"+compteur);
 
                 compteur++;
@@ -223,8 +236,15 @@ public class MainActivity extends AppCompatActivity {
             //myDashboard.setRpmprogress(compteur);
             //myDashboard.setRpmprogress(16000);
             //compteur=(compteur+100)%15000;
-            mViewPager.setCurrentItem(IhmTab,true);      //change tab with joystick X
-            startClient();
+
+            //wifiInfo = wifiManager.getConnectionInfo();
+            //if (wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
+            //    ssid = wifiInfo.getSSID();
+            //}
+            //if(ssid="OlfoxDas") {
+                //mViewPager.setCurrentItem(IhmTab, true);      //change tab with joystick X
+                startClient();
+            //}
 
             /** Do something **/
             mHandler.postDelayed(mRunnable, myRefreshViewPeriod);
@@ -292,6 +312,15 @@ public class MainActivity extends AppCompatActivity {
                     View view = binding.getRoot();
 
                     return view;
+
+                case 2:
+
+                    FragmentSensorBinding binding2 = DataBindingUtil.inflate(inflater,R.layout.fragment_sensor,container,false);
+                    binding2.setCapteur(mySensors);
+                    View view2 = binding2.getRoot();
+
+                    return view2;
+
 
                 default:    rootView = inflater.inflate(R.layout.fragment_main, container, false);
                     return rootView;
