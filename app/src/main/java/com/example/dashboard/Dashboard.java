@@ -15,6 +15,7 @@ public class Dashboard extends BaseObservable{
 
     public Dashboard(String initRpm){
         this.rpm=initRpm;
+
     }
 
     @Bindable

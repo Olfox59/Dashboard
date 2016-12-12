@@ -19,7 +19,7 @@ public class Sensors extends BaseObservable {
     @Bindable
     public void setText(String text) {
         this.text = text;
-        notifyPropertyChanged(BR.rpm);
+        notifyPropertyChanged(BR.text);
     }
 
     @Bindable

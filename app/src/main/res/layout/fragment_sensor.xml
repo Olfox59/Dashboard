@@ -17,45 +17,102 @@
 
 
         <LinearLayout
+            android:id="@+id/cadre_global"
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="223dp">
+            android:layout_height="match_parent">
 
-            <TextView
-                android:text="@{capteur.text}"
-                android:layout_width="188dp"
+            <LinearLayout
+                android:id="@+id/cadre_FRONT_Tyre"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:id="@+id/textView"
-                android:textColor="@color/common_google_signin_btn_text_dark_default"
-                android:layout_weight="0.36" />
+                android:layout_weight="1">
 
-            <TableLayout android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:layout_width="wrap_content">
-
-                <TableRow
+                <TextView
+                    android:orientation="horizontal"
+                    android:text="Front"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" >
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:id="@+id/Title_FRONT"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    />
+
+                <LinearLayout
+                    android:id="@+id/cadre_FRONT_Pressure"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp">
 
                     <TextView
-                        android:text="TextView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/textView2"
-                        android:layout_weight="0.36"
-                        android:background="@color/colorAccent" />
+                        android:orientation="horizontal"
+                        android:text="Pressure box"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:gravity="center"
+                        android:id="@+id/pressureF"
+                        android:textColor="@color/common_google_signin_btn_text_dark_default"
+                        />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cadre_FRONT_MLX90621"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp">
 
                     <TextView
-                        android:text="TextView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/textView3"
-                        android:background="@color/colorAccent" />
+                        android:orientation="horizontal"
+                        android:text="Front"
+                        android:layout_width="match_parent"
+                        android:layout_height="196dp"
+                        android:id="@+id/tyreF"
+                        android:textColor="@color/common_google_signin_btn_text_dark_default"
+                         />
 
-                </TableRow>
+                </LinearLayout>
 
 
-            </TableLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cadre_centre"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5">
+
+                <TextView
+                    android:text="@{capteur.text}"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    />
+
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cadre_REAR_Tyre"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <TextView
+                    android:text="row1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/tyreR"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"/>
+
+
+
+
+            </LinearLayout>
 
 
         </LinearLayout>

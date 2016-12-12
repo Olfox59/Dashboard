@@ -2,6 +2,13 @@ package com.example.dashboard;
 
 import android.content.Context;
 import android.databinding.DataBindingUtil;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.PaintDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RectShape;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -20,10 +27,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.dashboard.databinding.FragmentDashBinding;
 import com.example.dashboard.databinding.FragmentSensorBinding;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -59,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
     //Attribut Architecture
     Handler mHandler;
-    int myRefreshViewPeriod = 100;
-
+    int myRefreshViewPeriod = 1000;
+int mycol=0;
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
     final static Sensors mySensors = new Sensors();
@@ -79,12 +88,33 @@ public class MainActivity extends AppCompatActivity {
     //Attribut Joystick
     int smTab=0;
 
+    //attribut mlx90621
+    String [][]tempTyreFront = new String[4][16];
+    int [][]tempTyreFrontInt = new int[4][16];
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -98,19 +128,44 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         //fle lance le timer
         useHandler();
         Log.i(debugString,"fin oncreate");
         //startClient();
 
 
+
+
+
+
+
     }
 
     public void startClient(){
 
+
         m_ObjThreadClient = new Thread(new Runnable() {
             @Override
             public void run() {
+
+
 
             try {
 
@@ -136,17 +191,29 @@ public class MainActivity extends AppCompatActivity {
                 // READ
                 BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream() ) );
 
-                clientSocket.setSoTimeout(90);
+                clientSocket.setSoTimeout(900);
                 Log.i(debugString,"wait data from serveur...");
                 String dataMoto=""+br.readLine();
+
                 Log.i(debugString,"RECEIVE: "+dataMoto);
-                //dataMoto ="{key1:value1,key2:value2}";
+
+                mySensors.setText(""+dataMoto+" compteur="+compteur+""+"compteurErreur="+compteurErreur);
                 try {
                     JSONObject json_obj = new JSONObject(dataMoto);
 
                     //RPM
                     //myDashboard.setRpm(""+json_obj.getString("RPM")+"/"+compteur );
                     myDashboard.setRpm(""+json_obj.getString("RPM") );
+
+                    //rempli la table de temperature du sensor tyre front
+                    for(int y=0;y<4;y++){
+                        for(int x=0;x<16;x++) {
+                            String cell = Character.toString((char)(int)(97+y))+x;
+                            tempTyreFront[y][x]= json_obj.getString(cell);
+                            tempTyreFrontInt[y][x] = Integer.parseInt(tempTyreFront[y][x]);
+                        }
+                    }
+
                     //myDashboard.setRpmprogress(Integer.parseInt(myDashboard.getRpm()) );
                     Log.i(debugString,"rpm recu "+myDashboard.getRpm());
 
@@ -192,22 +259,20 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-                Log.i(debugString,dataMoto);
-
                 //CLOSE SOCKET
                 clientSocket.close();
                 Log.i(debugString,"Socket closed");
 
             } catch (IOException e) {
-
-                Log.i(debugString,""+e);
+                compteurErreur++;
+                Log.e(debugString,""+e+""+compteurErreur);
                 e.printStackTrace();
+                Log.e(debugString,"Stat="+(float)(((float)compteurErreur/(float)compteur)*100.0)+"%" );
+                mySensors.setText(" compteur="+compteur+""+"compteurErreur="+compteurErreur);
 
                 try {
                     clientSocket.close();
-                    compteurErreur++;
-                    Log.i(debugString,"TIMEOUT num erreur:"+compteurErreur);
-                    Log.e(debugString,"Stat="+(float)(((float)compteurErreur/(float)compteur)*100.0)+"%" );
+
                 }
                 catch (IOException e1) {
                     e1.printStackTrace();
@@ -230,6 +295,48 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            //Update Sensor color Gradient
+            //color Hue in HSL format = 1.74 * temperateure cellule - 52.2
+            //if color<0 , color = 0
+            //if color>87 (vert fluo), color=87
+
+            final TextView tvTyreF = (TextView)findViewById(R.id.tyreF);
+            ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
+                @Override
+                public Shader resize(int width, int height) {
+                    LinearGradient lg = new LinearGradient(0, 0, tvTyreF.getWidth(), tvTyreF.getHeight(),
+                            new int[]   {
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][0],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][1],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][2],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][3],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][4],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][5],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][6],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][7],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][8],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][9],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][10],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][11],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][12],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][13],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][14],240.0f,127.0f}),
+                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][15],240.0f,127.0f}),
+
+                            }, //substitute the correct colors for these
+                            new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
+                            //new float[] {0,0.5f,1},
+
+                            Shader.TileMode.REPEAT);
+                    return lg;
+                }
+            };
+            PaintDrawable p = new PaintDrawable();
+            p.setShape(new RectShape());
+            p.setShaderFactory(sf);
+            tvTyreF.setBackground((Drawable)p);
+            tvTyreF.getBackground().setAlpha(128);
+
 
             //Log.i("Handlers", ""+compteur);
 
@@ -248,6 +355,8 @@ public class MainActivity extends AppCompatActivity {
 
             /** Do something **/
             mHandler.postDelayed(mRunnable, myRefreshViewPeriod);
+
+
         }
     };
 
