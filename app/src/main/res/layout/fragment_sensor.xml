@@ -30,47 +30,59 @@
                 android:layout_weight="1">
 
                 <TextView
+                    android:id="@+id/Title_FRONT"
                     android:orientation="horizontal"
                     android:text="Front"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:id="@+id/Title_FRONT"
                     android:textColor="@color/common_google_signin_btn_text_dark_default"
                     />
 
                 <LinearLayout
                     android:id="@+id/cadre_FRONT_Pressure"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp">
+                    android:layout_height="200dp"
+                    android:layout_weight="2">
 
                     <TextView
+                        android:id="@+id/pressureF"
                         android:orientation="horizontal"
                         android:text="Pressure box"
                         android:layout_width="match_parent"
-                        android:layout_height="200dp"
+                        android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:id="@+id/pressureF"
                         android:textColor="@color/common_google_signin_btn_text_dark_default"
                         />
 
                 </LinearLayout>
 
-                <LinearLayout
+                <FrameLayout
                     android:id="@+id/cadre_FRONT_MLX90621"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp">
+                    android:layout_height="wrap_content"
+                    android:layout_weight="4">
 
-                    <TextView
+                    <ImageView
+                        android:id="@+id/imageView2"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:srcCompat="@drawable/front_tyre_picture"
+
+                        />
+
+                    <View
+                        android:id="@+id/tyreFGradient"
                         android:orientation="horizontal"
                         android:text="Front"
-                        android:layout_width="match_parent"
-                        android:layout_height="196dp"
-                        android:id="@+id/tyreF"
+                        android:layout_width="150px"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
                         android:textColor="@color/common_google_signin_btn_text_dark_default"
-                         />
+                        />
 
-                </LinearLayout>
+
+                </FrameLayout>
 
 
 

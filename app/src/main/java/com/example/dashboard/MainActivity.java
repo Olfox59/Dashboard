@@ -1,6 +1,5 @@
 package com.example.dashboard;
 
-import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -8,10 +7,9 @@ import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
 import android.graphics.drawable.shapes.RectShape;
-import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +30,6 @@ import android.widget.TextView;
 import com.example.dashboard.databinding.FragmentDashBinding;
 import com.example.dashboard.databinding.FragmentSensorBinding;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -300,11 +297,11 @@ int mycol=0;
             //if color<0 , color = 0
             //if color>87 (vert fluo), color=87
 
-            final TextView tvTyreF = (TextView)findViewById(R.id.tyreF);
+            final View tvTyreF = (View)findViewById(R.id.tyreFGradient);
             ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
                 @Override
                 public Shader resize(int width, int height) {
-                    LinearGradient lg = new LinearGradient(0, 0, tvTyreF.getWidth(), tvTyreF.getHeight(),
+                    LinearGradient lg = new LinearGradient(0, tvTyreF.getHeight(), tvTyreF.getWidth(), tvTyreF.getHeight(),
                             new int[]   {
                                     Color.HSVToColor(new float[]{tempTyreFrontInt[0][0],240.0f,127.0f}),
                                     Color.HSVToColor(new float[]{tempTyreFrontInt[0][1],240.0f,127.0f}),
@@ -333,9 +330,11 @@ int mycol=0;
             };
             PaintDrawable p = new PaintDrawable();
             p.setShape(new RectShape());
+            p.setCornerRadius(105.0f); //dimension image 679x201
+
             p.setShaderFactory(sf);
             tvTyreF.setBackground((Drawable)p);
-            tvTyreF.getBackground().setAlpha(128);
+            tvTyreF.getBackground().setAlpha(128);  //gestion de la transparence du gradient 9, 100%trans, 128 = 50%
 
 
             //Log.i("Handlers", ""+compteur);
