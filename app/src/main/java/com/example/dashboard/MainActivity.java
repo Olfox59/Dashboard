@@ -1,44 +1,23 @@
 package com.example.dashboard;
 
 import android.databinding.DataBindingUtil;
-import android.graphics.Color;
-import android.graphics.LinearGradient;
-import android.graphics.Shader;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.PaintDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.RectShape;
-import android.net.wifi.WifiInfo;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.TabLayout;
-import android.support.v7.app.AppCompatActivity;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.example.dashboard.databinding.FragmentDashBinding;
 import com.example.dashboard.databinding.FragmentSensorBinding;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,42 +37,16 @@ public class MainActivity extends AppCompatActivity {
      */
     private ViewPager mViewPager;
 
-    //Attribut debug
-    public  int compteur=0;
-    public int compteurErreur=0;
-    public int IhmTab =-1;
 
     //Attribut Architecture
     Handler mHandler;
+    MyTask myAsynctask = new MyTask(MainActivity.this);
+
     int myRefreshViewPeriod = 500;
     int myTCPTimeOut = myRefreshViewPeriod - 100;
-int mycol=0;
-    //Attribut Dashboard
+
     final static Dashboard myDashboard = new Dashboard("1500");
     final static Sensors mySensors = new Sensors();
-
-    //Attribut connection tcp
-    public static final String SERVER_IP = "192.168.4.1";
-    public int SERVER_PORT = 333;
-    Socket clientSocket= null;
-    Thread m_ObjThreadClient;
-    //Wifi
-    String ssid;
-    WifiInfo wifiInfo;
-    //WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
-
-    //Attribut Joystick
-    int smTab=0;
-    Joystick joystick;
-
-    //attribut mlx90621
-    String [][]tempTyreFront = new String[4][16];
-    int [][]tempTyreFrontInt = new int[4][16];
-    int []tempTyreFrontMean = new int[16];
-
-    Tyre FrontTyre = new Tyre();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,98 +74,6 @@ int mycol=0;
 
     }
 
-    public void startClient(){
-
-
-        m_ObjThreadClient = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-
-
-            try {
-
-                Log.i(debugString,"Input Thread"+compteur);
-
-                compteur++;
-
-                //OPEN SOKET
-                clientSocket = new Socket(SERVER_IP,SERVER_PORT);
-
-                Log.i(debugString,"connexion OK"+compteur);
-
-
-                //WRITE
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-                bw.write(""+compteur );
-                bw.newLine();
-                bw.flush();
-                Log.i(debugString,"SEND: "+compteur);
-
-
-
-                // READ
-                BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream() ) );
-
-                clientSocket.setSoTimeout(myTCPTimeOut);
-                Log.i(debugString,"wait data from serveur...");
-                String dataMoto=""+br.readLine();
-
-                Log.i(debugString,"RECEIVE: "+dataMoto);
-
-                mySensors.setText(""+dataMoto+" compteur="+compteur+""+"compteurErreur="+compteurErreur);
-                try {
-                    JSONObject json_obj = new JSONObject(dataMoto);
-
-                    //RPM ************************************
-                    //myDashboard.setRpm(""+json_obj.getString("RPM")+"/"+compteur );
-                    myDashboard.setRpm(""+json_obj.getString("RPM") );
-
-                    //TYRE*************************************
-
-                    FrontTyre.JsonToColor(json_obj);
-
-
-                    //myDashboard.setRpmprogress(Integer.parseInt(myDashboard.getRpm()) );
-                    Log.i(debugString,"rpm recu "+myDashboard.getRpm());
-
-                    //JOYSTICK- NAVIGATION
-                    joystick.JsonParser(json_obj);
-                    joystick.ChangeScreen(mViewPager.getCurrentItem());     // TODO deplacer dans on Post
-
-
-                } catch (JSONException e) {
-                    Log.i(debugString,"erreur JSON:"+e);
-                    e.printStackTrace();
-                }
-
-
-                //CLOSE SOCKET
-                clientSocket.close();
-                Log.i(debugString,"Socket closed");
-
-            } catch (IOException e) {
-                compteurErreur++;
-                Log.e(debugString,""+e+""+compteurErreur);
-                e.printStackTrace();
-                Log.e(debugString,"Stat="+(float)(((float)compteurErreur/(float)compteur)*100.0)+"%" );
-                mySensors.setText(" compteur="+compteur+""+"compteurErreur="+compteurErreur);
-
-                try {
-                    clientSocket.close();
-
-                }
-                catch (IOException e1) {
-                    e1.printStackTrace();
-                    Log.i(debugString,"FAIL close"+compteurErreur);
-                }
-            }
-
-            }
-        });
-
-        m_ObjThreadClient.start();
-    }
 
     public void useHandler() {
         mHandler = new Handler();
@@ -223,98 +84,16 @@ int mycol=0;
 
         @Override
         public void run() {
-            //Update Sensor color Gradient
-            //color Hue in HSL format = 1.74 * temperateure cellule - 52.2
-            //if color<0 , color = 0
-            //if color>87 (vert fluo), color=87
-//             final View vTyreF = (View)findViewById(R.id.tyreFGradient);
-            //myDrawGradientTempToColorScale(tempTyreFrontMean);        //rescale les couleurs avant d'afficher
-//            float hueCOLD = 226.0f; //BLEU
-//            float hueHOT = 0.0f;   //ROUGE
-//            float tempCOLD = 30.0f;  //en degC correspondant au BLEU
-//            float tempHOT = 100.0f;  //en degC correspondant au BLEU
-//
-//            float a = (hueCOLD / (tempCOLD - tempHOT));
-//            float b = hueHOT - (tempHOT*a);
-//
-//            for(int x=0;x<16;x++) {
-//                tempTyreFrontMean[x] = (int)((a*tempTyreFrontMean[x]) + b);  //le cast en int va aroundir a l'inferieur
-//                if(tempTyreFrontMean[x]>hueCOLD){
-//                    tempTyreFrontMean[x]=(int)hueCOLD;
-//                }
-//                else if(tempTyreFrontMean[x]<hueHOT){
-//                    tempTyreFrontMean[x]=(int)hueHOT;
-//                }
-//            }
-//
-//            ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
-//                @Override
-//                public Shader resize(int width, int height) {
-//                    LinearGradient lg = new LinearGradient(0, vTyreF.getHeight(), vTyreF.getWidth(), vTyreF.getHeight(),
-//                            new int[]   {
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[0],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[1],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[2],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[3],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[4],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[5],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[6],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[7],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[8],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[9],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[10],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[11],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[12],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[13],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[14],240.0f,127.0f}),
-//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[15],240.0f,127.0f}),
-//
-//                            }, //substitute the correct colors for these
-//                            new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
-//                            //new float[] {0,0.5f,1},
-//
-//                            Shader.TileMode.REPEAT);
-//                    return lg;
-//                }
-//            };
-//            PaintDrawable p = new PaintDrawable();
-//            p.setShape(new RectShape());
-//            p.setCornerRadius(105.0f); //dimension image 679x201
-//
-//            p.setShaderFactory(sf);
-//            vTyreF.setBackground((Drawable)p);
-//            vTyreF.getBackground().setAlpha(128);  //gestion de la transparence du gradient 0=100%trans, 128 = 50%,255 = opaque
 
+            Log.i("debug", "Call Asynctask ");
 
-            final View vTyreF = (View)findViewById(R.id.tyreFGradient);
-            //myDrawGradientTempToColorScale(tempTyreFrontMean);        //rescale les couleurs avant d'afficher
-            myDrawGradient(vTyreF,tempTyreFrontMean);                //test Avec les methode pour re organaiser proprement
-
-
-
-            //Log.i("Handlers", ""+compteur);
-
-            //myDashboard.setRpmprogress(compteur);
-            //myDashboard.setRpmprogress(16000);
-            //compteur=(compteur+100)%15000;
-
-            //wifiInfo = wifiManager.getConnectionInfo();
-            //if (wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
-            //    ssid = wifiInfo.getSSID();
-            //}
-            //if(ssid="OlfoxDas") {
-                //mViewPager.setCurrentItem(IhmTab, true);      //change tab with joystick X
-                startClient();
-
-
-            //}
+            myAsynctask.execute();
+            mySensors.setText(""+myAsynctask.frontTyre.GetGradient());
+            //mViewPager.setCurrentItem(IhmTab, true);      //change tab with joystick X
 
             /** Do something **/
-            mHandler.postDelayed(mRunnable, myRefreshViewPeriod);
 
 
-        }
-    };
 
 
 
@@ -322,50 +101,7 @@ int mycol=0;
      * Methode qui affiche le gradient de temperature dans la textBox
      * @param tvTyre
      */
-    private void myDrawGradient(final View tvTyre,final int tempTyreMean[]){
 
-        ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
-            @Override
-            public Shader resize(int width, int height) {
-                LinearGradient lg = new LinearGradient(0, tvTyre.getHeight(), tvTyre.getWidth(), tvTyre.getHeight(),
-
-                        FrontTyre.GetGradient(),
-/*                        new int[]   {
-                                Color.HSVToColor(new float[]{tempTyreMean[0],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[1],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[2],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[3],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[4],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[5],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[6],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[7],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[8],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[9],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[10],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[11],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[12],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[13],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[14],240.0f,127.0f}),
-                                Color.HSVToColor(new float[]{tempTyreMean[15],240.0f,127.0f}),
-
-                        },*/ //substitute the correct colors for these
-                        FrontTyre.Mlx90621.getGradientpostion(),
-                        //new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
-                        //new float[] {0,0.5f,1},
-
-                        Shader.TileMode.REPEAT);
-                return lg;
-            }
-        };
-        PaintDrawable p = new PaintDrawable();
-        p.setShape(new RectShape());
-        p.setCornerRadius(105.0f); //dimension image 679x201
-
-        p.setShaderFactory(sf);
-        tvTyre.setBackground((Drawable)p);
-        tvTyre.getBackground().setAlpha(128);  //gestion de la transparence du gradient 9, 100%trans, 128 = 50%
-
-    }
 
 
     /*********************************************
