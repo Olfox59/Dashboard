@@ -20,19 +20,21 @@
             android:id="@+id/cadre_global"
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            >
 
             <LinearLayout
                 android:id="@+id/cadre_FRONT_Tyre"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@drawable/border_gb"
                 android:layout_weight="1">
 
                 <TextView
                     android:id="@+id/Title_FRONT"
                     android:orientation="horizontal"
-                    android:text="Front"
+                    android:text="FRONT"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -43,7 +45,9 @@
                     android:id="@+id/cadre_FRONT_Pressure"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    android:layout_weight="2">
+                    android:layout_weight="2"
+
+                    >
 
                     <TextView
                         android:id="@+id/pressureF"
@@ -61,7 +65,8 @@
                     android:id="@+id/cadre_FRONT_MLX90621"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="4">
+                    android:layout_weight="4"
+                    >
 
                     <ImageView
                         android:id="@+id/imageView2"
@@ -103,8 +108,6 @@
                     android:textColor="@color/common_google_signin_btn_text_dark_default"
                     />
 
-
-
             </LinearLayout>
 
             <LinearLayout
@@ -115,16 +118,75 @@
                 android:layout_weight="1">
 
                 <TextView
-                    android:text="row1"
+                    android:id="@+id/Title_REAR"
+                    android:orientation="horizontal"
+                    android:text="REAR"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:id="@+id/tyreR"
-                    android:textColor="@color/common_google_signin_btn_text_dark_default"/>
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    />
 
+                <LinearLayout
+                    android:id="@+id/cadre_REAR_Pressure"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_weight="2">
+
+                    <TextView
+                        android:id="@+id/pressureR"
+                        android:orientation="horizontal"
+                        android:text="Pressure box"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/common_google_signin_btn_text_dark_default"
+                        />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/cadre_REAR_MLX90621"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="4">
+
+                    <ImageView
+                        android:id="@+id/imageView3"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:srcCompat="@drawable/rear_tyre_picture"
+
+                        />
+
+                    <View
+                        android:id="@+id/tyreRGradient"
+                        android:orientation="horizontal"
+                        android:text="Front"
+                        android:layout_width="150px"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:textColor="@color/common_google_signin_btn_text_dark_default"
+                        />
+
+
+                </FrameLayout>
 
 
 
             </LinearLayout>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         </LinearLayout>

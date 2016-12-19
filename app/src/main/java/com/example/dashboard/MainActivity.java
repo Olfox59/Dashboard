@@ -65,7 +65,8 @@ public class MainActivity extends AppCompatActivity {
 
     //Attribut Architecture
     Handler mHandler;
-    int myRefreshViewPeriod = 1000;
+    int myRefreshViewPeriod = 500;
+    int myTCPTimeOut = myRefreshViewPeriod - 100;
 int mycol=0;
     //Attribut Dashboard
     final static Dashboard myDashboard = new Dashboard("1500");
@@ -88,29 +89,14 @@ int mycol=0;
     //attribut mlx90621
     String [][]tempTyreFront = new String[4][16];
     int [][]tempTyreFrontInt = new int[4][16];
-
+    int []tempTyreFrontMean = new int[16];
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         // Create the adapter that will return a fragment for each of the three
@@ -126,32 +112,9 @@ int mycol=0;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         //fle lance le timer
         useHandler();
         Log.i(debugString,"fin oncreate");
-        //startClient();
-
-
-
-
-
-
 
     }
 
@@ -188,7 +151,7 @@ int mycol=0;
                 // READ
                 BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream() ) );
 
-                clientSocket.setSoTimeout(900);
+                clientSocket.setSoTimeout(myTCPTimeOut);
                 Log.i(debugString,"wait data from serveur...");
                 String dataMoto=""+br.readLine();
 
@@ -198,18 +161,38 @@ int mycol=0;
                 try {
                     JSONObject json_obj = new JSONObject(dataMoto);
 
-                    //RPM
+                    //RPM ************************************
                     //myDashboard.setRpm(""+json_obj.getString("RPM")+"/"+compteur );
                     myDashboard.setRpm(""+json_obj.getString("RPM") );
+
+                    //TYRE*************************************
+
+
 
                     //rempli la table de temperature du sensor tyre front
                     for(int y=0;y<4;y++){
                         for(int x=0;x<16;x++) {
-                            String cell = Character.toString((char)(int)(97+y))+x;
-                            tempTyreFront[y][x]= json_obj.getString(cell);
-                            tempTyreFrontInt[y][x] = Integer.parseInt(tempTyreFront[y][x]);
+                            String cell = Character.toString((char)(int)(97+y))+x;                  //creer le champ a chercher ex: c14
+                            //tempTyreFront[y][x]= json_obj.getString(cell);                          //get la valeur du champ dans json
+                            //tempTyreFrontInt[y][x] = Integer.parseInt(tempTyreFront[y][x]);         //convert string to int
+                            tempTyreFrontInt[y][x] = Integer.parseInt(json_obj.getString(cell) );
                         }
                     }
+
+                    //fait la moyenne de chque collonne car la temp doit etre uniforme
+                    //rempli la table de temperature du sensor tyre front
+
+                    for(int x=0;x<16;x++) {
+                            tempTyreFrontMean[x]= (  tempTyreFrontInt[0][x]+
+                                                    tempTyreFrontInt[1][x]+
+                                                    tempTyreFrontInt[2][x]+
+                                                    tempTyreFrontInt[3][x])/4;
+                    }
+
+
+
+
+
 
                     //myDashboard.setRpmprogress(Integer.parseInt(myDashboard.getRpm()) );
                     Log.i(debugString,"rpm recu "+myDashboard.getRpm());
@@ -229,7 +212,7 @@ int mycol=0;
                                 smTab = 1;
                             }
                             else{
-                                if( (joyX<200)&&(IhmTab >0) ){
+                                if( (joyX<200)&&(joyX!=0)&&(IhmTab >0)){
                                     IhmTab = IhmTab -1;
                                     smTab = 2;
                                 }
@@ -296,45 +279,69 @@ int mycol=0;
             //color Hue in HSL format = 1.74 * temperateure cellule - 52.2
             //if color<0 , color = 0
             //if color>87 (vert fluo), color=87
+//             final View vTyreF = (View)findViewById(R.id.tyreFGradient);
+            //myDrawGradientTempToColorScale(tempTyreFrontMean);        //rescale les couleurs avant d'afficher
+//            float hueCOLD = 226.0f; //BLEU
+//            float hueHOT = 0.0f;   //ROUGE
+//            float tempCOLD = 30.0f;  //en degC correspondant au BLEU
+//            float tempHOT = 100.0f;  //en degC correspondant au BLEU
+//
+//            float a = (hueCOLD / (tempCOLD - tempHOT));
+//            float b = hueHOT - (tempHOT*a);
+//
+//            for(int x=0;x<16;x++) {
+//                tempTyreFrontMean[x] = (int)((a*tempTyreFrontMean[x]) + b);  //le cast en int va aroundir a l'inferieur
+//                if(tempTyreFrontMean[x]>hueCOLD){
+//                    tempTyreFrontMean[x]=(int)hueCOLD;
+//                }
+//                else if(tempTyreFrontMean[x]<hueHOT){
+//                    tempTyreFrontMean[x]=(int)hueHOT;
+//                }
+//            }
+//
+//            ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
+//                @Override
+//                public Shader resize(int width, int height) {
+//                    LinearGradient lg = new LinearGradient(0, vTyreF.getHeight(), vTyreF.getWidth(), vTyreF.getHeight(),
+//                            new int[]   {
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[0],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[1],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[2],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[3],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[4],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[5],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[6],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[7],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[8],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[9],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[10],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[11],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[12],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[13],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[14],240.0f,127.0f}),
+//                                    Color.HSVToColor(new float[]{tempTyreFrontMean[15],240.0f,127.0f}),
+//
+//                            }, //substitute the correct colors for these
+//                            new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
+//                            //new float[] {0,0.5f,1},
+//
+//                            Shader.TileMode.REPEAT);
+//                    return lg;
+//                }
+//            };
+//            PaintDrawable p = new PaintDrawable();
+//            p.setShape(new RectShape());
+//            p.setCornerRadius(105.0f); //dimension image 679x201
+//
+//            p.setShaderFactory(sf);
+//            vTyreF.setBackground((Drawable)p);
+//            vTyreF.getBackground().setAlpha(128);  //gestion de la transparence du gradient 0=100%trans, 128 = 50%,255 = opaque
 
-            final View tvTyreF = (View)findViewById(R.id.tyreFGradient);
-            ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
-                @Override
-                public Shader resize(int width, int height) {
-                    LinearGradient lg = new LinearGradient(0, tvTyreF.getHeight(), tvTyreF.getWidth(), tvTyreF.getHeight(),
-                            new int[]   {
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][0],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][1],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][2],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][3],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][4],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][5],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][6],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][7],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][8],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][9],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][10],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][11],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][12],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][13],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][14],240.0f,127.0f}),
-                                    Color.HSVToColor(new float[]{tempTyreFrontInt[0][15],240.0f,127.0f}),
 
-                            }, //substitute the correct colors for these
-                            new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
-                            //new float[] {0,0.5f,1},
+            final View vTyreF = (View)findViewById(R.id.tyreFGradient);
+            myDrawGradientTempToColorScale(tempTyreFrontMean);        //rescale les couleurs avant d'afficher
+            myDrawGradient(vTyreF,tempTyreFrontMean);                //test Avec les methode pour re organaiser proprement
 
-                            Shader.TileMode.REPEAT);
-                    return lg;
-                }
-            };
-            PaintDrawable p = new PaintDrawable();
-            p.setShape(new RectShape());
-            p.setCornerRadius(105.0f); //dimension image 679x201
-
-            p.setShaderFactory(sf);
-            tvTyreF.setBackground((Drawable)p);
-            tvTyreF.getBackground().setAlpha(128);  //gestion de la transparence du gradient 9, 100%trans, 128 = 50%
 
 
             //Log.i("Handlers", ""+compteur);
@@ -350,6 +357,8 @@ int mycol=0;
             //if(ssid="OlfoxDas") {
                 //mViewPager.setCurrentItem(IhmTab, true);      //change tab with joystick X
                 startClient();
+
+
             //}
 
             /** Do something **/
@@ -358,6 +367,85 @@ int mycol=0;
 
         }
     };
+
+    /************************************
+     * Methode qui converti les 16 temperatures en couleurs
+     * temp<30degC BLEU , 80deg VERT , temp>100degC ROUGE
+     * @param tempTyreMean
+     */
+
+    private void myDrawGradientTempToColorScale(int [] tempTyreMean){
+        float hueCOLD = 150.0f; //BLEU
+        float hueHOT = 0.0f;   //ROUGE
+        float tempCOLD = 30.0f;  //en degC correspondant au BLEU
+        float tempHOT = 100.0f;  //en degC correspondant au BLEU
+
+        float a = (hueCOLD / (tempCOLD - tempHOT));
+        float b = hueHOT - (tempHOT*a);
+
+        for(int x=0;x<16;x++) {
+            tempTyreMean[x] = (int)((-a*tempTyreMean[x]) + b);  //le cast en int va aroundir a l'inferieur
+            if(tempTyreMean[x]>hueCOLD){
+                tempTyreMean[x]=(int)hueCOLD;
+            }
+            else if(tempTyreMean[x]<hueHOT){
+                tempTyreMean[x]=(int)hueHOT;
+            }
+        }
+    }
+
+    /******************************
+     * Methode qui affiche le gradient de temperature dans la textBox
+     * @param tvTyre
+     */
+    private void myDrawGradient(final View tvTyre,final int tempTyreMean[]){
+
+        ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
+            @Override
+            public Shader resize(int width, int height) {
+                LinearGradient lg = new LinearGradient(0, tvTyre.getHeight(), tvTyre.getWidth(), tvTyre.getHeight(),
+                        new int[]   {
+                                Color.HSVToColor(new float[]{tempTyreMean[0],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[1],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[2],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[3],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[4],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[5],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[6],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[7],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[8],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[9],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[10],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[11],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[12],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[13],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[14],240.0f,127.0f}),
+                                Color.HSVToColor(new float[]{tempTyreMean[15],240.0f,127.0f}),
+
+                        }, //substitute the correct colors for these
+                        new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
+                        //new float[] {0,0.5f,1},
+
+                        Shader.TileMode.REPEAT);
+                return lg;
+            }
+        };
+        PaintDrawable p = new PaintDrawable();
+        p.setShape(new RectShape());
+        p.setCornerRadius(105.0f); //dimension image 679x201
+
+        p.setShaderFactory(sf);
+        tvTyre.setBackground((Drawable)p);
+        tvTyre.getBackground().setAlpha(128);  //gestion de la transparence du gradient 9, 100%trans, 128 = 50%
+
+    }
+
+
+    /*********************************************
+     *
+     * fonction de bases gestion appli multi onglet
+     */
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
