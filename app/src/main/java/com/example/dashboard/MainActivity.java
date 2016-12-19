@@ -85,11 +85,14 @@ int mycol=0;
 
     //Attribut Joystick
     int smTab=0;
+    Joystick joystick;
 
     //attribut mlx90621
     String [][]tempTyreFront = new String[4][16];
     int [][]tempTyreFrontInt = new int[4][16];
     int []tempTyreFrontMean = new int[16];
+
+    Tyre FrontTyre = new Tyre();
 
 
     @Override
@@ -167,71 +170,16 @@ int mycol=0;
 
                     //TYRE*************************************
 
-
-
-                    //rempli la table de temperature du sensor tyre front
-                    for(int y=0;y<4;y++){
-                        for(int x=0;x<16;x++) {
-                            String cell = Character.toString((char)(int)(97+y))+x;                  //creer le champ a chercher ex: c14
-                            //tempTyreFront[y][x]= json_obj.getString(cell);                          //get la valeur du champ dans json
-                            //tempTyreFrontInt[y][x] = Integer.parseInt(tempTyreFront[y][x]);         //convert string to int
-                            tempTyreFrontInt[y][x] = Integer.parseInt(json_obj.getString(cell) );
-                        }
-                    }
-
-                    //fait la moyenne de chque collonne car la temp doit etre uniforme
-                    //rempli la table de temperature du sensor tyre front
-
-                    for(int x=0;x<16;x++) {
-                            tempTyreFrontMean[x]= (  tempTyreFrontInt[0][x]+
-                                                    tempTyreFrontInt[1][x]+
-                                                    tempTyreFrontInt[2][x]+
-                                                    tempTyreFrontInt[3][x])/4;
-                    }
-
-
-
-
+                    FrontTyre.JsonToColor(json_obj);
 
 
                     //myDashboard.setRpmprogress(Integer.parseInt(myDashboard.getRpm()) );
                     Log.i(debugString,"rpm recu "+myDashboard.getRpm());
 
                     //JOYSTICK- NAVIGATION
-                    int joyX = Integer.parseInt(json_obj.getString("JOYX") );
-                    int joyY = Integer.parseInt(json_obj.getString("JOYY") );
-                    int joyClick = Integer.parseInt(json_obj.getString("JOYCLICK") );
+                    joystick.JsonParser(json_obj);
+                    joystick.ChangeScreen(mViewPager.getCurrentItem());     // TODO deplacer dans on Post
 
-                    IhmTab = mViewPager.getCurrentItem();
-
-                    switch (smTab){
-                        case 0: //wait action
-
-                            if( (joyX>900)&&(IhmTab <2) ){
-                                IhmTab = IhmTab +1;
-                                smTab = 1;
-                            }
-                            else{
-                                if( (joyX<200)&&(joyX!=0)&&(IhmTab >0)){
-                                    IhmTab = IhmTab -1;
-                                    smTab = 2;
-                                }
-                            }
-                            break;
-
-                        case 1: //wait realease droit
-                            if( (joyX<700) ){ smTab = 0;  }         //release du joystick
-                            break;
-
-                        case 2: //wait realease gauche
-                            if( (joyX>400) ){smTab = 0;  }        //release du joystick
-                            break;
-
-                        default:
-                            //error
-                            break;
-
-                    }
 
                 } catch (JSONException e) {
                     Log.i(debugString,"erreur JSON:"+e);
@@ -339,7 +287,7 @@ int mycol=0;
 
 
             final View vTyreF = (View)findViewById(R.id.tyreFGradient);
-            myDrawGradientTempToColorScale(tempTyreFrontMean);        //rescale les couleurs avant d'afficher
+            //myDrawGradientTempToColorScale(tempTyreFrontMean);        //rescale les couleurs avant d'afficher
             myDrawGradient(vTyreF,tempTyreFrontMean);                //test Avec les methode pour re organaiser proprement
 
 
@@ -368,31 +316,7 @@ int mycol=0;
         }
     };
 
-    /************************************
-     * Methode qui converti les 16 temperatures en couleurs
-     * temp<30degC BLEU , 80deg VERT , temp>100degC ROUGE
-     * @param tempTyreMean
-     */
 
-    private void myDrawGradientTempToColorScale(int [] tempTyreMean){
-        float hueCOLD = 150.0f; //BLEU
-        float hueHOT = 0.0f;   //ROUGE
-        float tempCOLD = 30.0f;  //en degC correspondant au BLEU
-        float tempHOT = 100.0f;  //en degC correspondant au BLEU
-
-        float a = (hueCOLD / (tempCOLD - tempHOT));
-        float b = hueHOT - (tempHOT*a);
-
-        for(int x=0;x<16;x++) {
-            tempTyreMean[x] = (int)((-a*tempTyreMean[x]) + b);  //le cast en int va aroundir a l'inferieur
-            if(tempTyreMean[x]>hueCOLD){
-                tempTyreMean[x]=(int)hueCOLD;
-            }
-            else if(tempTyreMean[x]<hueHOT){
-                tempTyreMean[x]=(int)hueHOT;
-            }
-        }
-    }
 
     /******************************
      * Methode qui affiche le gradient de temperature dans la textBox
@@ -404,7 +328,9 @@ int mycol=0;
             @Override
             public Shader resize(int width, int height) {
                 LinearGradient lg = new LinearGradient(0, tvTyre.getHeight(), tvTyre.getWidth(), tvTyre.getHeight(),
-                        new int[]   {
+
+                        FrontTyre.GetGradient(),
+/*                        new int[]   {
                                 Color.HSVToColor(new float[]{tempTyreMean[0],240.0f,127.0f}),
                                 Color.HSVToColor(new float[]{tempTyreMean[1],240.0f,127.0f}),
                                 Color.HSVToColor(new float[]{tempTyreMean[2],240.0f,127.0f}),
@@ -422,8 +348,9 @@ int mycol=0;
                                 Color.HSVToColor(new float[]{tempTyreMean[14],240.0f,127.0f}),
                                 Color.HSVToColor(new float[]{tempTyreMean[15],240.0f,127.0f}),
 
-                        }, //substitute the correct colors for these
-                        new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
+                        },*/ //substitute the correct colors for these
+                        FrontTyre.Mlx90621.getGradientpostion(),
+                        //new float[] {0,0.0625f,0.125f,0.1875f,0.25f,0.3125f,0.375f,0.4375f,0.5f,0.5625f,0.6875f,0.75f,0.8125f,0.875f,0.9375f,1},
                         //new float[] {0,0.5f,1},
 
                         Shader.TileMode.REPEAT);
